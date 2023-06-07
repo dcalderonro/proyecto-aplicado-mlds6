@@ -1,0 +1,1033 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Daniel Fernando Calderon Romero\n",
+        "Valentina Salazar"
+      ],
+      "metadata": {
+        "id": "KeNXDtFR400A"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### **Age and Gender discriminator** ###\n",
+        "\n",
+        "-En el siguiente documento trataremos de abordar problemasticas relacionadas al deep learning con el fin de hacer uso de las metodologias para desarrollo de aplicaciones, inicialmente crearemos una conexion con GitHUb.\n"
+      ],
+      "metadata": {
+        "id": "gNSDO4sWrlpu"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Código de carga de los datos"
+      ],
+      "metadata": {
+        "id": "sii0MlzIrsAi"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "**Marco del proyecto**"
+      ],
+      "metadata": {
+        "id": "HRk94uHjrwmm"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "El objetivo de este projecto es lograr generar mediante el uso de deep learning, una diferenciación de la edad y del genero de una persona en una fotografía de rostro. El entrenamiento del modelo es generado con el dataset \"Deep Face\" de Riwei Chen de Github. "
+      ],
+      "metadata": {
+        "id": "hm4vEIgtr2Co"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!cat /etc/os-release"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "OzbG0Ksl5twU",
+        "outputId": "dcee812b-c100-48c8-f9a7-c04e65d69e04"
+      },
+      "execution_count": 1,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "NAME=\"Ubuntu\"\n",
+            "VERSION=\"20.04.5 LTS (Focal Fossa)\"\n",
+            "ID=ubuntu\n",
+            "ID_LIKE=debian\n",
+            "PRETTY_NAME=\"Ubuntu 20.04.5 LTS\"\n",
+            "VERSION_ID=\"20.04\"\n",
+            "HOME_URL=\"https://www.ubuntu.com/\"\n",
+            "SUPPORT_URL=\"https://help.ubuntu.com/\"\n",
+            "BUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\n",
+            "PRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\n",
+            "VERSION_CODENAME=focal\n",
+            "UBUNTU_CODENAME=focal\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install dvc dvc-gdrive"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        },
+        "id": "YxxShh-65z44",
+        "outputId": "c6e4edf2-fa23-4d6c-eaeb-f1fc06c982c8"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/\n",
+            "Collecting dvc\n",
+            "  Downloading dvc-2.58.2-py3-none-any.whl (440 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m440.6/440.6 kB\u001b[0m \u001b[31m15.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting dvc-gdrive\n",
+            "  Downloading dvc_gdrive-2.19.2-py3-none-any.whl (11 kB)\n",
+            "Collecting colorama>=0.3.9 (from dvc)\n",
+            "  Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)\n",
+            "Collecting configobj>=5.0.6 (from dvc)\n",
+            "  Downloading configobj-5.0.8-py2.py3-none-any.whl (36 kB)\n",
+            "Collecting distro>=1.3 (from dvc)\n",
+            "  Downloading distro-1.8.0-py3-none-any.whl (20 kB)\n",
+            "Collecting dpath<3,>=2.1.0 (from dvc)\n",
+            "  Downloading dpath-2.1.6-py3-none-any.whl (17 kB)\n",
+            "Collecting dvc-data<0.52,>=0.51.0 (from dvc)\n",
+            "  Downloading dvc_data-0.51.0-py3-none-any.whl (61 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m61.5/61.5 kB\u001b[0m \u001b[31m6.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting dvc-http>=2.29.0 (from dvc)\n",
+            "  Downloading dvc_http-2.30.2-py3-none-any.whl (12 kB)\n",
+            "Collecting dvc-render<1,>=0.3.1 (from dvc)\n",
+            "  Downloading dvc_render-0.5.3-py3-none-any.whl (19 kB)\n",
+            "Collecting dvc-studio-client<1,>=0.9.2 (from dvc)\n",
+            "  Downloading dvc_studio_client-0.10.0-py3-none-any.whl (10 kB)\n",
+            "Collecting dvc-task<1,>=0.2.1 (from dvc)\n",
+            "  Downloading dvc_task-0.2.1-py3-none-any.whl (24 kB)\n",
+            "Collecting flatten-dict<1,>=0.4.1 (from dvc)\n",
+            "  Downloading flatten_dict-0.4.2-py2.py3-none-any.whl (9.7 kB)\n",
+            "Collecting flufl.lock>=5 (from dvc)\n",
+            "  Downloading flufl.lock-7.1.1-py3-none-any.whl (11 kB)\n",
+            "Collecting funcy>=1.14 (from dvc)\n",
+            "  Downloading funcy-2.0-py2.py3-none-any.whl (30 kB)\n",
+            "Collecting grandalf<1,>=0.7 (from dvc)\n",
+            "  Downloading grandalf-0.8-py3-none-any.whl (41 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m41.8/41.8 kB\u001b[0m \u001b[31m3.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting hydra-core>=1.1 (from dvc)\n",
+            "  Downloading hydra_core-1.3.2-py3-none-any.whl (154 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m154.5/154.5 kB\u001b[0m \u001b[31m11.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting iterative-telemetry>=0.0.7 (from dvc)\n",
+            "  Downloading iterative_telemetry-0.0.8-py3-none-any.whl (10 kB)\n",
+            "Requirement already satisfied: networkx>=2.5 in /usr/local/lib/python3.10/dist-packages (from dvc) (3.1)\n",
+            "Requirement already satisfied: packaging>=19 in /usr/local/lib/python3.10/dist-packages (from dvc) (23.1)\n",
+            "Collecting pathspec>=0.10.3 (from dvc)\n",
+            "  Downloading pathspec-0.11.1-py3-none-any.whl (29 kB)\n",
+            "Requirement already satisfied: platformdirs<4,>=3.1.1 in /usr/local/lib/python3.10/dist-packages (from dvc) (3.3.0)\n",
+            "Requirement already satisfied: psutil>=5.8 in /usr/local/lib/python3.10/dist-packages (from dvc) (5.9.5)\n",
+            "Requirement already satisfied: pydot>=1.2.4 in /usr/local/lib/python3.10/dist-packages (from dvc) (1.4.2)\n",
+            "Collecting pygtrie>=2.3.2 (from dvc)\n",
+            "  Downloading pygtrie-2.5.0-py3-none-any.whl (25 kB)\n",
+            "Requirement already satisfied: pyparsing>=2.4.7 in /usr/local/lib/python3.10/dist-packages (from dvc) (3.0.9)\n",
+            "Requirement already satisfied: requests>=2.22 in /usr/local/lib/python3.10/dist-packages (from dvc) (2.27.1)\n",
+            "Requirement already satisfied: rich>=12 in /usr/local/lib/python3.10/dist-packages (from dvc) (13.3.4)\n",
+            "Collecting ruamel.yaml>=0.17.11 (from dvc)\n",
+            "  Downloading ruamel.yaml-0.17.31-py3-none-any.whl (112 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m112.1/112.1 kB\u001b[0m \u001b[31m11.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting scmrepo<2,>=1.0.0 (from dvc)\n",
+            "  Downloading scmrepo-1.0.3-py3-none-any.whl (54 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m54.7/54.7 kB\u001b[0m \u001b[31m5.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting shortuuid>=0.5 (from dvc)\n",
+            "  Downloading shortuuid-1.0.11-py3-none-any.whl (10 kB)\n",
+            "Collecting shtab<2,>=1.3.4 (from dvc)\n",
+            "  Downloading shtab-1.6.1-py3-none-any.whl (13 kB)\n",
+            "Requirement already satisfied: tabulate>=0.8.7 in /usr/local/lib/python3.10/dist-packages (from dvc) (0.8.10)\n",
+            "Collecting tomlkit>=0.11.1 (from dvc)\n",
+            "  Downloading tomlkit-0.11.8-py3-none-any.whl (35 kB)\n",
+            "Requirement already satisfied: tqdm<5,>=4.63.1 in /usr/local/lib/python3.10/dist-packages (from dvc) (4.65.0)\n",
+            "Collecting voluptuous>=0.11.7 (from dvc)\n",
+            "  Downloading voluptuous-0.13.1-py3-none-any.whl (29 kB)\n",
+            "Collecting zc.lockfile>=1.2.1 (from dvc)\n",
+            "  Downloading zc.lockfile-3.0.post1-py3-none-any.whl (9.8 kB)\n",
+            "Collecting pydrive2[fsspec]>=1.15.3 (from dvc-gdrive)\n",
+            "  Downloading PyDrive2-1.15.4-py3-none-any.whl (45 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m45.0/45.0 kB\u001b[0m \u001b[31m3.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hRequirement already satisfied: six in /usr/local/lib/python3.10/dist-packages (from configobj>=5.0.6->dvc) (1.16.0)\n",
+            "Collecting dictdiffer>=0.8.1 (from dvc-data<0.52,>=0.51.0->dvc)\n",
+            "  Downloading dictdiffer-0.9.0-py2.py3-none-any.whl (16 kB)\n",
+            "Collecting dvc-objects<1,>=0.22.0 (from dvc-data<0.52,>=0.51.0->dvc)\n",
+            "  Downloading dvc_objects-0.22.0-py3-none-any.whl (37 kB)\n",
+            "Collecting diskcache>=5.2.1 (from dvc-data<0.52,>=0.51.0->dvc)\n",
+            "  Downloading diskcache-5.6.1-py3-none-any.whl (45 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m45.6/45.6 kB\u001b[0m \u001b[31m4.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting nanotime>=0.5.2 (from dvc-data<0.52,>=0.51.0->dvc)\n",
+            "  Downloading nanotime-0.5.2.tar.gz (3.2 kB)\n",
+            "  Preparing metadata (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "Requirement already satisfied: attrs>=21.3.0 in /usr/local/lib/python3.10/dist-packages (from dvc-data<0.52,>=0.51.0->dvc) (23.1.0)\n",
+            "Collecting sqltrie<1,>=0.3.1 (from dvc-data<0.52,>=0.51.0->dvc)\n",
+            "  Downloading sqltrie-0.4.0-py3-none-any.whl (16 kB)\n",
+            "Requirement already satisfied: fsspec[http] in /usr/local/lib/python3.10/dist-packages (from dvc-http>=2.29.0->dvc) (2023.4.0)\n",
+            "Collecting aiohttp-retry>=2.5.0 (from dvc-http>=2.29.0->dvc)\n",
+            "  Downloading aiohttp_retry-2.8.3-py3-none-any.whl (9.8 kB)\n",
+            "Collecting dulwich (from dvc-studio-client<1,>=0.9.2->dvc)\n",
+            "  Downloading dulwich-0.21.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (510 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m510.1/510.1 kB\u001b[0m \u001b[31m34.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting celery<6,>=5.2.0 (from dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading celery-5.3.0-py3-none-any.whl (420 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m420.3/420.3 kB\u001b[0m \u001b[31m30.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting kombu<6,>=5.2.0 (from dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading kombu-5.3.0-py3-none-any.whl (198 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m198.5/198.5 kB\u001b[0m \u001b[31m18.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting atpublic>=2.3 (from flufl.lock>=5->dvc)\n",
+            "  Downloading atpublic-4.0-py3-none-any.whl (4.9 kB)\n",
+            "Collecting omegaconf<2.4,>=2.2 (from hydra-core>=1.1->dvc)\n",
+            "  Downloading omegaconf-2.3.0-py3-none-any.whl (79 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m79.5/79.5 kB\u001b[0m \u001b[31m8.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting antlr4-python3-runtime==4.9.* (from hydra-core>=1.1->dvc)\n",
+            "  Downloading antlr4-python3-runtime-4.9.3.tar.gz (117 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m117.0/117.0 kB\u001b[0m \u001b[31m12.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25h  Preparing metadata (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "Requirement already satisfied: appdirs in /usr/local/lib/python3.10/dist-packages (from iterative-telemetry>=0.0.7->dvc) (1.4.4)\n",
+            "Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from iterative-telemetry>=0.0.7->dvc) (3.12.0)\n",
+            "Requirement already satisfied: google-api-python-client>=1.12.5 in /usr/local/lib/python3.10/dist-packages (from pydrive2[fsspec]>=1.15.3->dvc-gdrive) (2.84.0)\n",
+            "Requirement already satisfied: oauth2client>=4.0.0 in /usr/local/lib/python3.10/dist-packages (from pydrive2[fsspec]>=1.15.3->dvc-gdrive) (4.1.3)\n",
+            "Requirement already satisfied: PyYAML>=3.0 in /usr/local/lib/python3.10/dist-packages (from pydrive2[fsspec]>=1.15.3->dvc-gdrive) (6.0)\n",
+            "Collecting pyOpenSSL>=19.1.0 (from pydrive2[fsspec]>=1.15.3->dvc-gdrive)\n",
+            "  Downloading pyOpenSSL-23.2.0-py3-none-any.whl (59 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m59.0/59.0 kB\u001b[0m \u001b[31m6.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hRequirement already satisfied: urllib3<1.27,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests>=2.22->dvc) (1.26.15)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests>=2.22->dvc) (2022.12.7)\n",
+            "Requirement already satisfied: charset-normalizer~=2.0.0 in /usr/local/lib/python3.10/dist-packages (from requests>=2.22->dvc) (2.0.12)\n",
+            "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests>=2.22->dvc) (3.4)\n",
+            "Requirement already satisfied: markdown-it-py<3.0.0,>=2.2.0 in /usr/local/lib/python3.10/dist-packages (from rich>=12->dvc) (2.2.0)\n",
+            "Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/dist-packages (from rich>=12->dvc) (2.14.0)\n",
+            "Collecting ruamel.yaml.clib>=0.2.7 (from ruamel.yaml>=0.17.11->dvc)\n",
+            "  Downloading ruamel.yaml.clib-0.2.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl (485 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m485.6/485.6 kB\u001b[0m \u001b[31m39.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting gitpython>3 (from scmrepo<2,>=1.0.0->dvc)\n",
+            "  Downloading GitPython-3.1.31-py3-none-any.whl (184 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m184.3/184.3 kB\u001b[0m \u001b[31m20.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting pygit2>=1.10.0 (from scmrepo<2,>=1.0.0->dvc)\n",
+            "  Downloading pygit2-1.12.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.9 MB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m4.9/4.9 MB\u001b[0m \u001b[31m86.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting asyncssh<3,>=2.13.1 (from scmrepo<2,>=1.0.0->dvc)\n",
+            "  Downloading asyncssh-2.13.1-py3-none-any.whl (348 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m348.5/348.5 kB\u001b[0m \u001b[31m33.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hRequirement already satisfied: setuptools in /usr/local/lib/python3.10/dist-packages (from zc.lockfile>=1.2.1->dvc) (67.7.2)\n",
+            "Collecting aiohttp (from aiohttp-retry>=2.5.0->dvc-http>=2.29.0->dvc)\n",
+            "  Downloading aiohttp-3.8.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.0 MB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.0/1.0 MB\u001b[0m \u001b[31m58.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hRequirement already satisfied: cryptography>=3.1 in /usr/local/lib/python3.10/dist-packages (from asyncssh<3,>=2.13.1->scmrepo<2,>=1.0.0->dvc) (40.0.2)\n",
+            "Requirement already satisfied: typing-extensions>=3.6 in /usr/local/lib/python3.10/dist-packages (from asyncssh<3,>=2.13.1->scmrepo<2,>=1.0.0->dvc) (4.5.0)\n",
+            "Collecting billiard<5.0,>=4.1.0 (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading billiard-4.1.0-py3-none-any.whl (86 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m86.7/86.7 kB\u001b[0m \u001b[31m9.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting click-didyoumean>=0.3.0 (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading click_didyoumean-0.3.0-py3-none-any.whl (2.7 kB)\n",
+            "Collecting click-plugins>=1.1.1 (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading click_plugins-1.1.1-py2.py3-none-any.whl (7.5 kB)\n",
+            "Collecting click-repl>=0.2.0 (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading click_repl-0.2.0-py3-none-any.whl (5.2 kB)\n",
+            "Requirement already satisfied: click<9.0,>=8.1.2 in /usr/local/lib/python3.10/dist-packages (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc) (8.1.3)\n",
+            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.10/dist-packages (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc) (2.8.2)\n",
+            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.10/dist-packages (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc) (2023.3)\n",
+            "Collecting vine<6.0,>=5.0.0 (from celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading vine-5.0.0-py2.py3-none-any.whl (9.4 kB)\n",
+            "Collecting gitdb<5,>=4.0.1 (from gitpython>3->scmrepo<2,>=1.0.0->dvc)\n",
+            "  Downloading gitdb-4.0.10-py3-none-any.whl (62 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m62.7/62.7 kB\u001b[0m \u001b[31m5.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hRequirement already satisfied: httplib2<1dev,>=0.15.0 in /usr/local/lib/python3.10/dist-packages (from google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (0.21.0)\n",
+            "Requirement already satisfied: google-auth<3.0.0dev,>=1.19.0 in /usr/local/lib/python3.10/dist-packages (from google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (2.17.3)\n",
+            "Requirement already satisfied: google-auth-httplib2>=0.1.0 in /usr/local/lib/python3.10/dist-packages (from google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (0.1.0)\n",
+            "Requirement already satisfied: google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5 in /usr/local/lib/python3.10/dist-packages (from google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (2.11.0)\n",
+            "Requirement already satisfied: uritemplate<5,>=3.0.1 in /usr/local/lib/python3.10/dist-packages (from google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (4.1.1)\n",
+            "Collecting amqp<6.0.0,>=5.1.1 (from kombu<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc)\n",
+            "  Downloading amqp-5.1.1-py3-none-any.whl (50 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m50.8/50.8 kB\u001b[0m \u001b[31m5.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hRequirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/dist-packages (from markdown-it-py<3.0.0,>=2.2.0->rich>=12->dvc) (0.1.2)\n",
+            "Requirement already satisfied: pyasn1>=0.1.7 in /usr/local/lib/python3.10/dist-packages (from oauth2client>=4.0.0->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (0.5.0)\n",
+            "Requirement already satisfied: pyasn1-modules>=0.0.5 in /usr/local/lib/python3.10/dist-packages (from oauth2client>=4.0.0->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (0.3.0)\n",
+            "Requirement already satisfied: rsa>=3.1.4 in /usr/local/lib/python3.10/dist-packages (from oauth2client>=4.0.0->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (4.9)\n",
+            "Requirement already satisfied: cffi>=1.9.1 in /usr/local/lib/python3.10/dist-packages (from pygit2>=1.10.0->scmrepo<2,>=1.0.0->dvc) (1.15.1)\n",
+            "Collecting orjson (from sqltrie<1,>=0.3.1->dvc-data<0.52,>=0.51.0->dvc)\n",
+            "  Downloading orjson-3.9.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (136 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m137.0/137.0 kB\u001b[0m \u001b[31m13.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting multidict<7.0,>=4.5 (from aiohttp->aiohttp-retry>=2.5.0->dvc-http>=2.29.0->dvc)\n",
+            "  Downloading multidict-6.0.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (114 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m114.5/114.5 kB\u001b[0m \u001b[31m11.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting async-timeout<5.0,>=4.0.0a3 (from aiohttp->aiohttp-retry>=2.5.0->dvc-http>=2.29.0->dvc)\n",
+            "  Downloading async_timeout-4.0.2-py3-none-any.whl (5.8 kB)\n",
+            "Collecting yarl<2.0,>=1.0 (from aiohttp->aiohttp-retry>=2.5.0->dvc-http>=2.29.0->dvc)\n",
+            "  Downloading yarl-1.9.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (268 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m268.8/268.8 kB\u001b[0m \u001b[31m25.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting frozenlist>=1.1.1 (from aiohttp->aiohttp-retry>=2.5.0->dvc-http>=2.29.0->dvc)\n",
+            "  Downloading frozenlist-1.3.3-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (149 kB)\n",
+            "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m149.6/149.6 kB\u001b[0m \u001b[31m16.3 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hCollecting aiosignal>=1.1.2 (from aiohttp->aiohttp-retry>=2.5.0->dvc-http>=2.29.0->dvc)\n",
+            "  Downloading aiosignal-1.3.1-py3-none-any.whl (7.6 kB)\n",
+            "Requirement already satisfied: pycparser in /usr/local/lib/python3.10/dist-packages (from cffi>=1.9.1->pygit2>=1.10.0->scmrepo<2,>=1.0.0->dvc) (2.21)\n",
+            "Requirement already satisfied: prompt-toolkit in /usr/local/lib/python3.10/dist-packages (from click-repl>=0.2.0->celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc) (3.0.38)\n",
+            "Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython>3->scmrepo<2,>=1.0.0->dvc)\n",
+            "  Downloading smmap-5.0.0-py3-none-any.whl (24 kB)\n",
+            "Requirement already satisfied: googleapis-common-protos<2.0dev,>=1.56.2 in /usr/local/lib/python3.10/dist-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (1.59.0)\n",
+            "Requirement already satisfied: protobuf!=3.20.0,!=3.20.1,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<5.0.0dev,>=3.19.5 in /usr/local/lib/python3.10/dist-packages (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (3.20.3)\n",
+            "Requirement already satisfied: cachetools<6.0,>=2.0.0 in /usr/local/lib/python3.10/dist-packages (from google-auth<3.0.0dev,>=1.19.0->google-api-python-client>=1.12.5->pydrive2[fsspec]>=1.15.3->dvc-gdrive) (5.3.0)\n",
+            "Requirement already satisfied: wcwidth in /usr/local/lib/python3.10/dist-packages (from prompt-toolkit->click-repl>=0.2.0->celery<6,>=5.2.0->dvc-task<1,>=0.2.1->dvc) (0.2.6)\n",
+            "Building wheels for collected packages: antlr4-python3-runtime, nanotime\n",
+            "  Building wheel for antlr4-python3-runtime (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for antlr4-python3-runtime: filename=antlr4_python3_runtime-4.9.3-py3-none-any.whl size=144554 sha256=6477932aee214481a59b6bc94978722559feabc3d1a83498d82301fa7a5f32d1\n",
+            "  Stored in directory: /root/.cache/pip/wheels/12/93/dd/1f6a127edc45659556564c5730f6d4e300888f4bca2d4c5a88\n",
+            "  Building wheel for nanotime (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "  Created wheel for nanotime: filename=nanotime-0.5.2-py3-none-any.whl size=2424 sha256=786c4d1b24429e7cf45414410cd41206df33ea7f259d400697b2404d7658cd16\n",
+            "  Stored in directory: /root/.cache/pip/wheels/73/bb/71/028f42cbcf24b1b60dda71f31867996546232b28dcc253fe4c\n",
+            "Successfully built antlr4-python3-runtime nanotime\n",
+            "Installing collected packages: voluptuous, pygtrie, nanotime, funcy, dictdiffer, antlr4-python3-runtime, zc.lockfile, vine, tomlkit, smmap, shtab, shortuuid, ruamel.yaml.clib, pathspec, orjson, omegaconf, multidict, grandalf, frozenlist, flatten-dict, dvc-render, dulwich, dpath, distro, diskcache, configobj, colorama, click-plugins, click-didyoumean, billiard, atpublic, async-timeout, yarl, sqltrie, ruamel.yaml, pygit2, iterative-telemetry, hydra-core, gitdb, flufl.lock, dvc-studio-client, dvc-objects, click-repl, amqp, aiosignal, pyOpenSSL, kombu, gitpython, dvc-data, asyncssh, aiohttp, scmrepo, celery, aiohttp-retry, pydrive2, dvc-task, dvc-http, dvc, dvc-gdrive\n",
+            "Successfully installed aiohttp-3.8.4 aiohttp-retry-2.8.3 aiosignal-1.3.1 amqp-5.1.1 antlr4-python3-runtime-4.9.3 async-timeout-4.0.2 asyncssh-2.13.1 atpublic-4.0 billiard-4.1.0 celery-5.3.0 click-didyoumean-0.3.0 click-plugins-1.1.1 click-repl-0.2.0 colorama-0.4.6 configobj-5.0.8 dictdiffer-0.9.0 diskcache-5.6.1 distro-1.8.0 dpath-2.1.6 dulwich-0.21.5 dvc-2.58.2 dvc-data-0.51.0 dvc-gdrive-2.19.2 dvc-http-2.30.2 dvc-objects-0.22.0 dvc-render-0.5.3 dvc-studio-client-0.10.0 dvc-task-0.2.1 flatten-dict-0.4.2 flufl.lock-7.1.1 frozenlist-1.3.3 funcy-2.0 gitdb-4.0.10 gitpython-3.1.31 grandalf-0.8 hydra-core-1.3.2 iterative-telemetry-0.0.8 kombu-5.3.0 multidict-6.0.4 nanotime-0.5.2 omegaconf-2.3.0 orjson-3.9.0 pathspec-0.11.1 pyOpenSSL-23.2.0 pydrive2-1.15.4 pygit2-1.12.1 pygtrie-2.5.0 ruamel.yaml-0.17.31 ruamel.yaml.clib-0.2.7 scmrepo-1.0.3 shortuuid-1.0.11 shtab-1.6.1 smmap-5.0.0 sqltrie-0.4.0 tomlkit-0.11.8 vine-5.0.0 voluptuous-0.13.1 yarl-1.9.2 zc.lockfile-3.0.post1\n"
+          ]
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "application/vnd.colab-display-data+json": {
+              "pip_warning": {
+                "packages": [
+                  "pydevd_plugins"
+                ]
+              }
+            }
+          },
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!apt install tree"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "uKcWQdFo57P5",
+        "outputId": "354a97ef-5982-43a3-8286-97fef4ea41e5"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Reading package lists... Done\n",
+            "Building dependency tree       \n",
+            "Reading state information... Done\n",
+            "The following NEW packages will be installed:\n",
+            "  tree\n",
+            "0 upgraded, 1 newly installed, 0 to remove and 38 not upgraded.\n",
+            "Need to get 43.0 kB of archives.\n",
+            "After this operation, 115 kB of additional disk space will be used.\n",
+            "Get:1 http://archive.ubuntu.com/ubuntu focal/universe amd64 tree amd64 1.8.0-1 [43.0 kB]\n",
+            "Fetched 43.0 kB in 0s (129 kB/s)\n",
+            "Selecting previously unselected package tree.\n",
+            "(Reading database ... 122541 files and directories currently installed.)\n",
+            "Preparing to unpack .../tree_1.8.0-1_amd64.deb ...\n",
+            "Unpacking tree (1.8.0-1) ...\n",
+            "Setting up tree (1.8.0-1) ...\n",
+            "Processing triggers for man-db (2.9.1-1) ...\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!dvc --version"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "gU9CtB-j5-af",
+        "outputId": "ea67ed49-8618-4c58-b4f2-17c53944b2d1"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "2.58.2\n",
+            "\u001b[0m"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from IPython import get_ipython"
+      ],
+      "metadata": {
+        "id": "wk5cxjcq6E5c"
+      },
+      "execution_count": 5,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "*Creación de un repositorio*\n"
+      ],
+      "metadata": {
+        "id": "CNHjLOLt6MgJ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!mkdir myrepo\n",
+        "%cd myrepo"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ljfSSW-Y6QO-",
+        "outputId": "14c9beb9-fb12-46cd-8202-408d131b744a"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/content/myrepo\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "46_U78cCp2yX",
+        "outputId": "5166651e-1ade-4a3c-c46e-ec01ef22a0d3"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Cloning into 'Adience'...\n",
+            "remote: Enumerating objects: 487, done.\u001b[K\n",
+            "remote: Total 487 (delta 0), reused 0 (delta 0), pack-reused 487\u001b[K\n",
+            "Receiving objects: 100% (487/487), 136.73 MiB | 25.60 MiB/s, done.\n",
+            "Resolving deltas: 100% (97/97), done.\n",
+            "Updating files: 100% (317/317), done.\n",
+            "fetch: Fetching reference refs/heads/master\n",
+            "Failed to download the dataset.\n"
+          ]
+        }
+      ],
+      "source": [
+        "import os\n",
+        "\n",
+        "# Set up Git username and email\n",
+        "!git config --global user.name \"vsalazar1\"\n",
+        "!git config --global user.email \"vsalazar@unal.edu.co\"\n",
+        "\n",
+        "# Create the directory if it doesn't exist\n",
+        "repo_dir = \"Adience\"\n",
+        "if not os.path.exists(repo_dir):\n",
+        "    os.makedirs(repo_dir)\n",
+        "\n",
+        "# Clone the repository\n",
+        "repo_url = \"https://github.com/RiweiChen/DeepFace\"\n",
+        "!git clone $repo_url $repo_dir\n",
+        "\n",
+        "# Navigate to the cloned repository\n",
+        "os.chdir(repo_dir)\n",
+        "\n",
+        "# Download the dataset using Git LFS\n",
+        "!git lfs fetch\n",
+        "!git lfs checkout\n",
+        "\n",
+        "# Navigate back to the original directory\n",
+        "os.chdir(\"..\")\n",
+        "\n",
+        "# Verify the downloaded dataset\n",
+        "data_dir = os.path.join(repo_dir, \"aligned\")\n",
+        "if os.path.exists(data_dir):\n",
+        "    print(\"Dataset downloaded successfully.\")\n",
+        "else:\n",
+        "    print(\"Failed to download the dataset.\")\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!git init\n",
+        "!mkdir data"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "GTitsmzj6igv",
+        "outputId": "0923f600-7e15-447e-8aa0-d9f55b4a8a0a"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Initialized empty Git repository in /content/myrepo/.git/\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!tree"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WXnHGe-B6ri2",
+        "outputId": "9d08796b-4ed0-4e8d-895e-50e6366622bc"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[01;34m.\u001b[00m\n",
+            "├── \u001b[01;34mAdience\u001b[00m\n",
+            "│   ├── \u001b[01;34mFaceAge\u001b[00m\n",
+            "│   │   ├── deploy.prototxt\n",
+            "│   │   ├── readme.md\n",
+            "│   │   ├── solver.prototxt\n",
+            "│   │   ├── train.sh\n",
+            "│   │   └── train_val.prototxt\n",
+            "│   ├── \u001b[01;34mFaceAlignment\u001b[00m\n",
+            "│   │   ├── \u001b[01;34mDataPrecessing\u001b[00m\n",
+            "│   │   │   └── faceProcessing.py\n",
+            "│   │   ├── \u001b[01;34mEvaluate\u001b[00m\n",
+            "│   │   │   ├── demo.py\n",
+            "│   │   │   ├── evaluate.py\n",
+            "│   │   │   ├── recovery_all.py\n",
+            "│   │   │   └── \u001b[01;34mresult\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m100.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m101.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m102.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m103.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m104.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m105.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m106.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m107.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m108.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m109.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m10.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m110.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m111.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m112.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m113.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m114.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m115.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m116.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m117.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m118.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m119.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m11.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m120.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m121.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m122.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m123.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m124.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m125.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m126.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m127.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m128.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m129.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m12.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m130.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m131.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m132.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m133.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m134.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m135.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m136.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m137.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m138.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m139.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m13.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m140.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m141.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m142.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m143.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m144.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m145.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m146.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m147.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m148.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m149.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m14.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m150.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m151.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m152.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m153.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m154.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m155.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m156.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m157.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m158.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m159.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m15.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m160.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m161.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m162.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m163.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m164.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m165.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m166.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m167.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m168.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m169.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m16.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m170.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m171.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m172.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m173.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m174.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m175.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m176.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m177.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m178.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m179.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m17.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m180.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m181.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m182.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m183.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m184.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m185.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m186.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m187.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m188.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m189.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m18.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m190.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m191.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m192.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m193.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m194.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m195.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m196.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m197.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m198.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m199.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m19.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m1.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m20.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m21.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m22.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m23.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m24.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m25.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m26.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m27.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m28.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m29.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m2.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m30.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m31.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m32.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m33.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m34.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m35.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m36.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m37.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m38.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m39.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m3.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m40.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m41.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m42.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m43.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m44.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m45.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m46.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m47.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m48.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m49.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m4.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m50.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m51.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m52.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m53.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m54.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m55.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m56.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m57.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m58.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m59.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m5.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m60.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m61.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m62.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m63.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m64.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m65.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m66.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m67.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m68.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m69.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m6.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m70.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m71.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m72.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m73.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m74.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m75.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m76.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m77.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m78.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m79.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m7.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m80.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m81.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m82.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m83.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m84.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m85.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m86.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m87.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m88.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m89.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m8.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m90.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m91.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m92.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m93.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m94.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m95.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m96.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m97.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m98.jpg\u001b[00m\n",
+            "│   │   │       ├── \u001b[01;35m99.jpg\u001b[00m\n",
+            "│   │   │       └── \u001b[01;35m9.jpg\u001b[00m\n",
+            "│   │   ├── \u001b[01;34mfigures\u001b[00m\n",
+            "│   │   │   └── deepid.png\n",
+            "│   │   ├── \u001b[01;34mModel\u001b[00m\n",
+            "│   │   │   └── \u001b[01;34mtry1_2\u001b[00m\n",
+            "│   │   │       ├── snapshot_iter_1500000.caffemodel\n",
+            "│   │   │       └── snapshot_iter_1500000.solverstate\n",
+            "│   │   ├── README.md\n",
+            "│   │   ├── \u001b[01;34mresult\u001b[00m\n",
+            "│   │   │   └── 1.png\n",
+            "│   │   ├── \u001b[01;34mtry1_1\u001b[00m\n",
+            "│   │   │   ├── depoly.prototxt\n",
+            "│   │   │   ├── solver.prototxt\n",
+            "│   │   │   ├── train.sh\n",
+            "│   │   │   └── train_val.prototxt\n",
+            "│   │   └── \u001b[01;34mtry1_2\u001b[00m\n",
+            "│   │       ├── depoly.prototxt\n",
+            "│   │       ├── network.png\n",
+            "│   │       ├── solver.prototxt\n",
+            "│   │       ├── train.sh\n",
+            "│   │       └── train_val.prototxt\n",
+            "│   ├── \u001b[01;34mFaceAttrictive\u001b[00m\n",
+            "│   │   └── \u001b[01;34mtry1_2\u001b[00m\n",
+            "│   │       ├── attractive_train.list\n",
+            "│   │       ├── attractive_val.list\n",
+            "│   │       ├── deploy.prototxt\n",
+            "│   │       ├── solver.prototxt\n",
+            "│   │       ├── train.sh\n",
+            "│   │       └── train_val.prototxt\n",
+            "│   ├── \u001b[01;34mFaceDataset\u001b[00m\n",
+            "│   │   └── readme.md\n",
+            "│   ├── \u001b[01;34mFaceDetection\u001b[00m\n",
+            "│   │   ├── \u001b[01;34mbaseline\u001b[00m\n",
+            "│   │   │   ├── deploy_fc.prototxt\n",
+            "│   │   │   ├── deploy.prototxt\n",
+            "│   │   │   ├── evaluate_48.py\n",
+            "│   │   │   ├── filter.py\n",
+            "│   │   │   ├── \u001b[01;34mheatmap\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m10.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m1.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m2.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m3.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m4.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m5.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m6.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m7.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m8.jpg\u001b[00m\n",
+            "│   │   │   │   └── \u001b[01;35m9.jpg\u001b[00m\n",
+            "│   │   │   ├── \u001b[01;34mimages\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m1.jpg\u001b[00m\n",
+            "│   │   │   │   └── \u001b[01;35m2.jpg\u001b[00m\n",
+            "│   │   │   ├── network.png\n",
+            "│   │   │   ├── network-tb.png\n",
+            "│   │   │   ├── nms.py\n",
+            "│   │   │   ├── render_result.py\n",
+            "│   │   │   ├── \u001b[01;34mresult\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m104.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m116.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m194.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m1.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m203.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m2.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m81.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m84.jpg\u001b[00m\n",
+            "│   │   │   │   ├── \u001b[01;35m92.jpg\u001b[00m\n",
+            "│   │   │   │   └── \u001b[01;35m94.jpg\u001b[00m\n",
+            "│   │   │   ├── snapshot_iter_100000.caffemodel\n",
+            "│   │   │   ├── snapshot_iter_100000_fc.caffemodel\n",
+            "│   │   │   └── train_val.prototxt\n",
+            "│   │   ├── README.md\n",
+            "│   │   ├── \u001b[01;34mresult\u001b[00m\n",
+            "│   │   │   ├── \u001b[01;35m1.jpeg\u001b[00m\n",
+            "│   │   │   └── \u001b[01;35m2.jpeg\u001b[00m\n",
+            "│   │   ├── \u001b[01;34mtry1_4\u001b[00m\n",
+            "│   │   │   ├── solver.prototxt\n",
+            "│   │   │   ├── train.sh\n",
+            "│   │   │   └── train_val.prototxt\n",
+            "│   │   └── \u001b[01;34mtry2_1\u001b[00m\n",
+            "│   │       ├── solver.prototxt\n",
+            "│   │       ├── train.sh\n",
+            "│   │       └── train_val.prototxt\n",
+            "│   ├── \u001b[01;34mFaceExpression\u001b[00m\n",
+            "│   │   └── \u001b[01;34mFER\u001b[00m\n",
+            "│   │       ├── deploy.prototxt\n",
+            "│   │       ├── plot_cm.py\n",
+            "│   │       └── result.md\n",
+            "│   ├── \u001b[01;34mFaceGender\u001b[00m\n",
+            "│   │   ├── deploy.prototxt\n",
+            "│   │   ├── evaluate_path.py\n",
+            "│   │   ├── readme.md\n",
+            "│   │   └── train_val.prototxt\n",
+            "│   ├── \u001b[01;34mFaceProcessing\u001b[00m\n",
+            "│   │   ├── \u001b[01;34mdata\u001b[00m\n",
+            "│   │   │   └── shape_predictor_68_face_landmarks.dat\n",
+            "│   │   └── face_normalization.py\n",
+            "│   ├── \u001b[01;34mFaceRecongnition\u001b[00m\n",
+            "│   │   ├── \u001b[01;34mdeepid\u001b[00m\n",
+            "│   │   │   ├── deploy.prototxt\n",
+            "│   │   │   ├── evaluate_lfw.py\n",
+            "│   │   │   ├── \u001b[01;34mfilelist_lfw\u001b[00m\n",
+            "│   │   │   │   ├── filelist_label.list\n",
+            "│   │   │   │   ├── filelist_left.list\n",
+            "│   │   │   │   └── filelist_right.list\n",
+            "│   │   │   ├── lr.png\n",
+            "│   │   │   ├── solver.prototxt\n",
+            "│   │   │   ├── train.sh\n",
+            "│   │   │   ├── train_val.png\n",
+            "│   │   │   └── train_val.prototxt\n",
+            "│   │   ├── README.md\n",
+            "│   │   └── \u001b[01;34mresult\u001b[00m\n",
+            "│   │       └── roc_cosine.png\n",
+            "│   ├── \u001b[01;34mFaceSmile\u001b[00m\n",
+            "│   │   ├── demo.py\n",
+            "│   │   ├── deploy_smile.prototxt\n",
+            "│   │   ├── face_smile.model\n",
+            "│   │   ├── face_smile.py\n",
+            "│   │   ├── model_smile.py\n",
+            "│   │   ├── smile.list\n",
+            "│   │   ├── smile_train.list\n",
+            "│   │   ├── smile_val.list\n",
+            "│   │   └── \u001b[01;34mtry1_2\u001b[00m\n",
+            "│   │       ├── deploy.prototxt\n",
+            "│   │       ├── solver.prototxt\n",
+            "│   │       ├── train.sh\n",
+            "│   │       └── train_val.prototxt\n",
+            "│   ├── README_ch.md\n",
+            "│   ├── README.md\n",
+            "│   ├── \u001b[01;34mresource\u001b[00m\n",
+            "│   │   └── \u001b[01;31mcaffe-local.zip\u001b[00m\n",
+            "│   └── \u001b[01;34mutil\u001b[00m\n",
+            "│       ├── convert_2_lmdb.py\n",
+            "│       ├── convert_data_to_lmdb.sh\n",
+            "│       ├── convert_imagelist_2_hdf5.py\n",
+            "│       ├── div_train_val.py\n",
+            "│       ├── make_file_list.py\n",
+            "│       ├── plot_cm.py\n",
+            "│       ├── processing_data_type.py\n",
+            "│       ├── readme.md\n",
+            "│       └── show_face_key_points.py\n",
+            "└── \u001b[01;34mdata\u001b[00m\n",
+            "\n",
+            "37 directories, 316 files\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!head Adience/FaceAge/deploy.prototxt"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "tlp9b6Oa6wa1",
+        "outputId": "54a2b25a-da10-4d8f-fc88-fbaef82bbafe"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "input: \"data\"\n",
+            "input_dim: 1\n",
+            "input_dim: 1\n",
+            "input_dim: 128\n",
+            "input_dim: 128\n",
+            "# --- stage 1, we use a little bit large filter ~\n",
+            "layer {\n",
+            "  name: \"conv1\" type: \"Convolution\" bottom: \"data\" top: \"conv1\"\n",
+            "  param { lr_mult: 1 decay_mult: 1 }\n",
+            "  param { lr_mult: 2 decay_mult: 0 }\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!git status"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "iRGXM0_q686O",
+        "outputId": "301715f3-a846-439a-dc20-e4b215c4c2c8"
+      },
+      "execution_count": 11,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "On branch master\n",
+            "\n",
+            "No commits yet\n",
+            "\n",
+            "Untracked files:\n",
+            "  (use \"git add <file>...\" to include in what will be committed)\n",
+            "\t\u001b[31mAdience/\u001b[m\n",
+            "\n",
+            "nothing added to commit but untracked files present (use \"git add\" to track)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!dvc init"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "jFU6MhCE6_la",
+        "outputId": "ef992cd9-4072-4c35-b890-0ccfbfcb55cb"
+      },
+      "execution_count": 12,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Initialized DVC repository.\n",
+            "\n",
+            "You can now commit the changes to git.\n",
+            "\n",
+            "\u001b[31m+---------------------------------------------------------------------+\n",
+            "\u001b[0m\u001b[31m|\u001b[0m                                                                     \u001b[31m|\u001b[0m\n",
+            "\u001b[31m|\u001b[0m        DVC has enabled anonymous aggregate usage analytics.         \u001b[31m|\u001b[0m\n",
+            "\u001b[31m|\u001b[0m     Read the analytics documentation (and how to opt-out) here:     \u001b[31m|\u001b[0m\n",
+            "\u001b[31m|\u001b[0m             <\u001b[36mhttps://dvc.org/doc/user-guide/analytics\u001b[39m>              \u001b[31m|\u001b[0m\n",
+            "\u001b[31m|\u001b[0m                                                                     \u001b[31m|\u001b[0m\n",
+            "\u001b[31m+---------------------------------------------------------------------+\n",
+            "\u001b[0m\n",
+            "\u001b[33mWhat's next?\u001b[39m\n",
+            "\u001b[33m------------\u001b[39m\n",
+            "- Check out the documentation: <\u001b[36mhttps://dvc.org/doc\u001b[39m>\n",
+            "- Get help and share ideas: <\u001b[36mhttps://dvc.org/chat\u001b[39m>\n",
+            "- Star us on GitHub: <\u001b[36mhttps://github.com/iterative/dvc\u001b[39m>\n",
+            "\u001b[0m"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ls -a"
+      ],
+      "metadata": {
+        "id": "CyRYDH1W7DBW",
+        "outputId": "63fd3859-9d29-46cc-dad2-52c86f15fafb",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            ".  ..  Adience\tdata  .dvc  .dvcignore\t.git\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
